@@ -43,9 +43,9 @@ const Navbar = () => {
             { name: 'home', path: '/' },
             { name: 'list', path: '/list' },
             { name: 'ongoing', path: '/ongoing' },
-            { name: 'complete', path: '/complete' },
+            { name: 'donghua', path: '/donghua' },
             { name: 'schedule', path: '/schedule' },
-            { name: 'genre', path: '/genre' },
+            { name: 'movie', path: '/movies' },
           ].map((item) => (
             <Link 
               key={item.name}

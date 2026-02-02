@@ -16,6 +16,8 @@
     "@fortawesome/react-fontawesome": "^3.1.1",
     "@hono/node-server": "^1.19.9",
     "@tailwindcss/vite": "^4.1.18",
+    "axios": "^1.13.4",
+    "cheerio": "^1.2.0",
     "dotenv": "^17.2.3",
     "hls.js": "^1.6.15",
     "hono": "^4.11.4",

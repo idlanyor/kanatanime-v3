@@ -11,6 +11,7 @@ export interface Anime {
   genre: string[];
   synopsis: string;
   likes?: string;
+  type?: string;
 }
 
 export interface DetailedEpisode {

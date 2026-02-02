@@ -4,6 +4,19 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 
+import { 
+  scrapeHome, 
+  scrapeAnimeList, 
+  scrapeDetail, 
+  scrapeWatch, 
+  scrapeSearch,
+  scrapeSchedule,
+  scrapeSeriesList,
+  scrapeSeriesListMode,
+  scrapeMovieList,
+  scrapeDonghuaList 
+} from './scraper'
+
 const app = new Hono()
 
 app.use('*', cors())
@@ -19,7 +32,6 @@ app.use('*', async (c, next) => {
 app.use('*', logger())
 
 const SANKA_BASE_URL = 'https://www.sankavollerei.com/anime'
-const ANIMEPLAY_BASE_URL = 'https://www.sankavollerei.com/movie/api/animeplay'
 const RYZUMI_BASE_URL = 'https://backend.ryzumi.vip/anime'
 
 // Helper to fetch and stream response
@@ -78,30 +90,133 @@ app.get('/', (c) => {
   return c.text('Anime Proxy Server is running!')
 })
 
-// Sanka Routes
-// Frontend: https://www.sankavollerei.com/anime/home -> /api/sanka/home
+// Scraper Routes
+app.get('/api/animeplay/home', async (c) => {
+    try {
+        const data = await scrapeHome()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/trending', async (c) => {
+    try {
+        const result = await scrapeAnimeList('?order=popular')
+        return c.json({ status: 'success', data: result.data.data })
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/ongoing', async (c) => {
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeAnimeList(`?status=ongoing&page=${page}`)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/complete', async (c) => {
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeAnimeList(`?status=completed&page=${page}`)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/donghua', async (c) => {
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeDonghuaList(page)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/listanime', async (c) => {
+    try {
+        const data = await scrapeSeriesListMode()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/list-mode', async (c) => {
+    try {
+        const data = await scrapeSeriesListMode()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/listdonghua', async (c) => {
+    try {
+        const data = await scrapeSeriesList('donghua')
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/movies', async (c) => {
+    const page = c.req.query('page') || '1'
+    try {
+        const result = await scrapeMovieList(page)
+        return c.json(result)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/schedule', async (c) => {
+    try {
+        const data = await scrapeSchedule()
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/search', async (c) => {
+    const query = c.req.query('q') || ''
+    try {
+        const data = await scrapeSearch(query)
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/detail/:slug', async (c) => {
+    const slug = c.req.param('slug')
+    try {
+        const data = await scrapeDetail(slug)
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+app.get('/api/animeplay/watch/:slug', async (c) => {
+    const slug = c.req.param('slug')
+    try {
+        const data = await scrapeWatch(slug)
+        return c.json(data)
+    } catch (e) {
+        return c.json({ error: String(e) }, 500)
+    }
+})
+
+// Legacy / Other Routes
 app.all('/api/sanka/*', async (c) => {
-  const path = c.req.path.replace('/api/sanka', '')
-  const query = c.req.query()
-  const queryString = new URLSearchParams(query).toString()
-  const targetUrl = `${SANKA_BASE_URL}${path}${queryString ? '?' + queryString : ''}`
-  
-  return proxyRequest(c, targetUrl)
-})
-
-// Animeplay Routes
-app.all('/api/animeplay/*', async (c) => {
-  const path = c.req.path.replace('/api/animeplay', '')
-  const query = c.req.query()
-  const queryString = new URLSearchParams(query).toString()
-  const targetUrl = `${ANIMEPLAY_BASE_URL}${path}${queryString ? '?' + queryString : ''}`
-  
-  return proxyRequest(c, targetUrl)
-})
-
-// Ryzumi Routes
-// Frontend: https://backend.ryzumi.vip/anime/episode/... -> /api/ryzumi/episode/...
-app.all('/api/ryzumi/*', async (c) => {
   const path = c.req.path.replace('/api/ryzumi', '')
   const query = c.req.query()
   const queryString = new URLSearchParams(query).toString()

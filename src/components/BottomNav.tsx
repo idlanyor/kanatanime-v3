@@ -31,6 +31,15 @@ const BottomNav = () => {
       )
     },
     { 
+      name: 'Donghua', 
+      path: '/donghua', 
+      icon: (
+        <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      )
+    },
+    { 
       name: 'List', 
       path: '/list', 
       icon: (
@@ -40,16 +49,15 @@ const BottomNav = () => {
         </svg>
       )
     },
-    { 
-      name: 'Genre', 
-      path: '/genre', 
-      icon: (
-        <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="M9 15.511L12 12l3 3.511M12 12V4m0 16a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"/>
-        </svg>
-      )
-    },
-    { 
+        {
+          name: 'Movie',
+          path: '/movies',
+          icon: (
+            <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          )
+        },    { 
       name: 'Schedule', 
       path: '/schedule', 
       icon: (

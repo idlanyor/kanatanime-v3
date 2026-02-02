@@ -4,7 +4,6 @@ import { Anime } from '../types';
 import { MOCK_ANIME } from '../constants';
 import Loader from '../components/Loader';
 import Badge from '../components/Badge';
-import Button from '../components/Button';
 import AnimeCard from '../components/AnimeCard';
 import PreviewModal from '../components/PreviewModal';
 import { useFavorites } from '../hooks/useFavorites';
@@ -118,7 +117,7 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
 
         {/* Main Visual Card - Tilted & Wrapped in Link */}
         <div className="relative w-[85%] md:w-[80%] h-[300px] md:h-[400px] lg:h-[500px] z-10 transition-transform duration-700 group-hover:scale-[1.02]">
-           <Link to={`/detail/${featured.id}`} className="absolute inset-0 z-10 block">
+           <Link to={featured.type === 'episode' ? `/episode/${featured.id}` : `/detail/${featured.id}`} className="absolute inset-0 z-10 block">
               <div className="absolute inset-0 bg-black transform rotate-1 shadow-[8px_8px_0px_0px_var(--neo-coral)] md:shadow-[15px_15px_0px_0px_var(--neo-coral)]"></div>
               <div className="absolute inset-0 border-4 md:border-8 border-black overflow-hidden transform -rotate-1 bg-gray-900 shadow-[6px_6px_0px_0px_white] md:shadow-[10px_10px_0px_0px_white]">
                  <img 
@@ -138,7 +137,7 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
                     <Badge color="black" className="text-[8px] md:text-[10px] italic">TOP_INTEL</Badge>
                     <Badge color="coral" className="text-[8px] md:text-[10px]">EP_{featured.episode}</Badge>
                  </div>
-                 <h1 className="text-xl md:text-5xl lg:text-6xl font-normal heading-font text-black leading-none mb-3 md:mb-6 italic uppercase tracking-tighter drop-shadow-[1px_1px_0px_white] md:drop-shadow-[2px_2px_0px_white] line-clamp-1 md:line-clamp-none">
+                 <h1 className="text-xl md:text-3xl lg:text-4xl font-normal heading-font text-black leading-none mb-3 md:mb-6 italic uppercase tracking-tighter drop-shadow-[1px_1px_0px_white] md:drop-shadow-[2px_2px_0px_white] line-clamp-1 md:line-clamp-none">
                     {featured.title}
                  </h1>
                  <div className="hidden md:block bg-black text-white p-4 border-l-8 border-[var(--neo-coral)] mb-6 shadow-[4px_4px_0px_0px_white]">
@@ -229,7 +228,7 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10">
           {trendingList.map((anime, index) => (
             <div 
-              key={anime.id} 
+              key={`trending-${anime.id}-${index}`} 
               className="animate-reveal" 
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -258,7 +257,7 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10">
             {movieList.map((anime, index) => (
               <div 
-                key={anime.id} 
+                key={`movie-${anime.id}-${index}`} 
                 className="animate-reveal" 
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -269,16 +268,16 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
         </section>
       )}
 
-      {/* Completed Section */}
+      {/* Donghua Section */}
       <section>
         <div className="flex items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <div className="bg-[#007AFF] text-white px-6 py-3 border-4 border-black transform rotate-1 shadow-[8px_8px_0px_0px_black]">
-              <h2 className="text-4xl md:text-5xl font-black syne italic uppercase">Selesai Ditayangkan</h2>
+              <h2 className="text-4xl md:text-5xl font-black syne italic uppercase">Animasi China</h2>
             </div>
             <div className="hidden md:block flex-1 h-2 bg-black min-w-[50px]"></div>
           </div>
-          <Link to="/complete">
+          <Link to="/donghua">
             <button className="px-6 py-2 bg-[#4CD964] text-black font-black syne border-4 border-black shadow-[4px_4px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer uppercase text-sm md:text-lg">
               See All →
             </button>
@@ -287,7 +286,7 @@ const Home = ({ trending, movies, completed, loading }: { trending: Anime[], mov
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10">
           {completedList.map((anime, index) => (
             <div 
-              key={anime.id} 
+              key={`donghua-${anime.id}-${index}`} 
               className="animate-reveal" 
               style={{ animationDelay: `${index * 0.1}s` }}
             >

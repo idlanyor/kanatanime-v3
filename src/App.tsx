@@ -8,7 +8,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import OngoingPage from './pages/OngoingPage';
 import MoviesPage from './pages/MoviesPage';
-import CompletePage from './pages/CompletePage';
+import DonghuaPage from './pages/DonghuaPage';
 import SearchPage from './pages/SearchPage';
 import AnimeDetail from './pages/AnimeDetail';
 import WatchPage from './pages/WatchPage';
@@ -41,11 +41,12 @@ export default function App() {
       banner: item.image_url || '',
       episode: item.latest_episode ? `EP ${item.latest_episode}` : '??',
       status: 'ONGOING', // Defaulting for now
-      year: item.date_created ? new Date(item.date_created).getFullYear() : 2025,
+      year: item.date_created ? new Date(item.date_created).getFullYear() : new Date().getFullYear(),
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: ['Anime'], 
       synopsis: `Watch ${item.title} on Kanatanime V3.`,
-      likes: `${Math.floor(Math.random() * 50) + 1}K`
+      likes: `${Math.floor(Math.random() * 50) + 1}K`,
+      type: item.type
     }));
   };
 
@@ -95,7 +96,7 @@ export default function App() {
           } />
           <Route path="/ongoing" element={<OngoingPage />} />
           <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/complete" element={<CompletePage />} />
+          <Route path="/donghua" element={<DonghuaPage />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/list" element={<SeriesListPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
@@ -106,6 +107,7 @@ export default function App() {
           <Route path="/search/:query" element={<SearchPage />} />
           <Route path="/detail/:slug" element={<AnimeDetail />} />
           <Route path="/watch/:slug/:episodeSlug" element={<WatchPage />} />
+          <Route path="/episode/:episodeSlug" element={<WatchPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
@@ -162,8 +164,29 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Disclaimer & DMCA Section */}
+        <div className="max-w-7xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+          <div className="bg-white/5 border-2 border-dashed border-gray-700 p-6">
+            <h4 className="font-black oswald text-xl text-[#FF3B30] mb-3 uppercase italic tracking-widest">⚠️ DISCLAIMER</h4>
+            <p className="text-xs font-bold text-gray-300 leading-relaxed uppercase">
+              Kanatanime V3 is a content aggregator/scraper. We do not host, store, or upload any video files on our servers. 
+              All streaming content is provided by non-affiliated third-party providers. Kanatanime V3 is not responsible for 
+              the accuracy, compliance, copyright, legality, or decency of the content served from these external sources.
+            </p>
+          </div>
+          <div className="bg-white/5 border-2 border-dashed border-gray-700 p-6">
+            <h4 className="font-black oswald text-xl text-[#FFCC00] mb-3 uppercase italic tracking-widest">⚖️ DMCA NOTICE</h4>
+            <p className="text-xs font-bold text-gray-300 leading-relaxed uppercase">
+              We respect intellectual property rights. If you believe your copyrighted material is being linked through our platform 
+              without authorization, please contact the original hosting provider for removal. As we do not host the files, 
+              removal from the source will automatically update our index. For removal requests from our index, please email our team.
+            </p>
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto mt-12 pt-8 border-t-2 border-gray-800 text-center text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-          © 2025 KANATANIME V3 - NO RIGHTS RESERVED. BEYOND BOLD.
+          © 2023 - {new Date().getFullYear()} KANATANIME V3 - NO RIGHTS RESERVED. BEYOND BOLD.
         </div>
       </footer>
     </div>

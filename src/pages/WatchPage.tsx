@@ -18,7 +18,8 @@ interface StreamData {
 }
 
 const WatchPage = () => {
-  const { slug, episodeSlug } = useParams<{ slug: string, episodeSlug: string }>();
+  const { slug, episodeSlug: epSlugParam } = useParams<{ slug: string, episodeSlug: string }>();
+  const episodeSlug = slug && !epSlugParam ? slug : epSlugParam; // Handle /episode/:slug case
   const navigate = useNavigate();
   const [streams, setStreams] = useState<StreamData[]>([]);
   const [animeDetail, setAnimeDetail] = useState<DetailedAnime | null>(null);
@@ -35,41 +36,49 @@ const WatchPage = () => {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      if (!episodeSlug || !slug) return;
+      if (!episodeSlug) return;
       
-      // If we already have anime detail, we're just switching episodes
-      if (animeDetail) {
-        if (animeDetail.id !== slug) {
-          // Different anime, reset everything
+      let currentSeriesSlug = slug;
+
+      // Reset states if changing series
+      if (animeDetail && slug && animeDetail.id !== slug) {
           setAnimeDetail(null);
           setLoading(true);
-        } else {
-          setFetchingEpisode(true);
-        }
-        setStreams([]);
-        setCurrentStream(null);
+          setStreams([]);
+          setCurrentStream(null);
+      } else if (!animeDetail) {
+          setLoading(true);
       } else {
-        setLoading(true);
+          setFetchingEpisode(true);
       }
 
       try {
-        // Fetch Episode Stream Data
+        // 1. Fetch Episode Stream Data
         const epRes = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/watch/${episodeSlug}`);
         const epJson = await epRes.json();
         
         if (epJson.status === 'success' && epJson.data?.data) {
           const streamList = epJson.data.data;
+          const foundSeriesSlug = epJson.data.seriesSlug;
           setStreams(streamList);
           
+          // Redirect to proper watch URL if we only have episodeSlug
+          if (!slug && foundSeriesSlug) {
+              navigate(`/watch/${foundSeriesSlug}/${episodeSlug}`, { replace: true });
+              return; // Effect will re-run with slug
+          }
+
+          if (!currentSeriesSlug) currentSeriesSlug = foundSeriesSlug;
+
           // Try to match saved preferred quality
           const savedQuality = localStorage.getItem('preferred_quality');
           const matchedStream = streamList.find((s: any) => s.quality === savedQuality) || streamList[0];
           setCurrentStream(matchedStream || null);
         }
 
-        // Only fetch detail if we don't have it or if it's a different anime
-        if (!animeDetail || animeDetail.id !== slug) {
-          const detailRes = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/detail/${slug}`);
+        // 2. Fetch Detail if missing or mismatched
+        if (currentSeriesSlug && (!animeDetail || animeDetail.id !== currentSeriesSlug)) {
+          const detailRes = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/detail/${currentSeriesSlug}`);
           const detailJson = await detailRes.json();
 
           if (detailJson.status === 'success' && detailJson.data?.data) {
@@ -81,7 +90,7 @@ const WatchPage = () => {
               banner: d.image_url,
               episode: d.latest_episode?.toString() || '?',
               status: d.season_status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'ONGOING',
-              year: d.release_date ? new Date(d.release_date).getFullYear() : 2026,
+              year: d.release_date ? new Date(d.release_date).getFullYear() : new Date().getFullYear(),
               rating: d.rating ? parseFloat(d.rating) : 0,
               genre: d.genres?.map((g: any) => g.genre.name) || [],
               synopsis: d.synopsis || 'No synopsis available.',
@@ -116,6 +125,7 @@ const WatchPage = () => {
     fetchAllData();
     window.scrollTo(0, 0);
   }, [slug, episodeSlug]);
+
 
   const getAdjacentEpisodes = () => {
     if (!animeDetail || !animeDetail.episodes || !episodeSlug) return { prev: null, next: null };

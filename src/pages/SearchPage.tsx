@@ -20,7 +20,7 @@ const SearchPage = () => {
       banner: item.image_url || '',
       episode: item.latest_episode ? `EP ${item.latest_episode}` : '??',
       status: 'ONGOING', // Default
-      year: item.date_created ? new Date(item.date_created).getFullYear() : 2025,
+      year: item.date_created ? new Date(item.date_created).getFullYear() : new Date().getFullYear(),
       rating: item.rating ? parseFloat(item.rating) : 0,
       genre: [item.type || 'Anime'],
       synopsis: item.broadcast ? `Broadcast: ${item.broadcast}` : `Released: ${item.date_created ? new Date(item.date_created).toLocaleDateString() : 'Recently'}`,

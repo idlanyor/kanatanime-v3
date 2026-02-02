@@ -13,49 +13,11 @@ const SchedulePage = () => {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/ongoing?page=1`); // Page 1 usually enough for schedule
+        const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/schedule`);
         const json = await res.json();
         
-        if (json.status === 'success' && json.data?.data) {
-          const list = json.data.data;
-          
-          // Group by day
-          const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          const grouped: Record<string, any[]> = {
-            'Monday': [], 'Tuesday': [], 'Wednesday': [], 'Thursday': [], 'Friday': [], 'Saturday': [], 'Sunday': [], 'Other': []
-          };
-
-          list.forEach((anime: any) => {
-            const broadcast = anime.broadcast || '';
-            let dayFound = false;
-            for (const day of daysOrder) {
-                if (broadcast.includes(day)) {
-                    grouped[day].push({
-                        title: anime.title,
-                        slug: anime.id,
-                        poster: anime.image_url
-                    });
-                    dayFound = true;
-                    break;
-                }
-            }
-            if (!dayFound) {
-                 grouped['Other'].push({
-                    title: anime.title,
-                    slug: anime.id,
-                    poster: anime.image_url
-                });
-            }
-          });
-
-          const finalSchedule: ScheduleDay[] = Object.entries(grouped)
-            .filter(([_, list]) => list.length > 0)
-            .map(([day, list]) => ({
-              day,
-              anime_list: list
-            }));
-
-          setSchedule(finalSchedule);
+        if (json.status === 'success' && Array.isArray(json.data)) {
+          setSchedule(json.data);
         }
       } catch (err) {
         console.error('Schedule Fetch Error:', err);

@@ -60,7 +60,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, onHold }) => {
 
   return (
     <Link 
-      to={`/detail/${anime.id}`}
+      to={anime.type === 'episode' ? `/episode/${anime.id}` : `/detail/${anime.id}`}
       onClick={handleCardClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

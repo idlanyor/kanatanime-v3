@@ -1,51 +1,30 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Anime } from '../types';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
-import AnimeCard from '../components/AnimeCard';
 import { ANIMEPLAY_API_BASE_URL } from '../constants';
 import { authenticatedFetch } from '../utils/api';
 
-type SeriesType = 'ALL' | 'ANIME' | 'DONGHUA';
+interface GroupedList {
+  letter: string;
+  items: { id: string; title: string }[];
+}
 
 const SeriesListPage = () => {
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
-  const [donghuaList, setDonghuaList] = useState<Anime[]>([]);
+  const [groupedList, setGroupedList] = useState<GroupedList[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<SeriesType>('ALL');
-  const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
-
-  const mapApiData = (data: any[], type: 'Anime' | 'Donghua'): Anime[] => {
-    if (!Array.isArray(data)) return [];
-    return data.map((item: any) => ({
-      id: item.seri.id,
-      title: item.seri.title,
-      thumbnail: item.seri.image_url || '',
-      banner: item.seri.image_url || '',
-      episode: item.number ? `EP ${item.number}` : '??',
-      status: 'ONGOING',
-      year: item.date_created ? new Date(item.date_created).getFullYear() : 2026,
-      rating: item.seri.rating ? parseFloat(item.seri.rating) : 0,
-      genre: [type],
-      synopsis: `Latest Release: ${item.date_created ? new Date(item.date_created).toLocaleDateString() : 'Recently'}.`,
-      likes: `${Math.floor(Math.random() * 50) + 1}K`
-    }));
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchList = async () => {
       try {
         setLoading(true);
-        const [animeRes, donghuaRes] = await Promise.all([
-          authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/listanime`),
-          authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/listdonghua`)
-        ]);
-
-        const animeJson = await animeRes.json();
-        const donghuaJson = await donghuaRes.json();
+        const res = await authenticatedFetch(`${ANIMEPLAY_API_BASE_URL}/list-mode`);
+        const json = await res.json();
         
-        if (animeJson.status === 'success') setAnimeList(mapApiData(animeJson.data, 'Anime'));
-        if (donghuaJson.status === 'success') setDonghuaList(mapApiData(donghuaJson.data, 'Donghua'));
+        if (json.status === 'success' && Array.isArray(json.data)) {
+          setGroupedList(json.data);
+        }
       } catch (error) {
         console.error('Fetch Error:', error);
       } finally {
@@ -53,88 +32,86 @@ const SeriesListPage = () => {
       }
     };
 
-    fetchAll();
+    fetchList();
     window.scrollTo(0, 0);
   }, []);
 
-  const filteredList = useMemo(() => {
-    let combined = [];
-    if (filter === 'ALL') combined = [...animeList, ...donghuaList];
-    else if (filter === 'ANIME') combined = animeList;
-    else combined = donghuaList;
+  const filteredList = groupedList.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
 
-    // Sort by date or title? Let's keep original combined order or sort by title
-    return combined;
-  }, [filter, animeList, donghuaList]);
-
-  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
-  const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const currentList = filteredList.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-  useEffect(() => {
-    setPage(1); // Reset page on filter change
-  }, [filter]);
-
-  if (loading) return <Loader message="MERGING DATABASES..." />;
+  if (loading) return <Loader message="DECRYPTING FULL DATABASE..." />;
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-12">
       <header className="bg-black border-8 border-white p-8 md:p-12 shadow-[12px_12px_0px_0px_#FFCC00] transform -rotate-1 relative overflow-hidden text-white">
         <div className="absolute top-0 right-0 opacity-10 font-black text-8xl -translate-y-4 uppercase select-none">Catalog</div>
         <h1 className="text-4xl md:text-7xl font-black oswald italic relative z-10 uppercase">Series Catalog</h1>
-        <div className="flex flex-wrap gap-4 mt-6 relative z-10">
-            {(['ALL', 'ANIME', 'DONGHUA'] as SeriesType[]).map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setFilter(t)}
-                    className={`px-6 py-2 border-4 border-white font-black oswald uppercase transition-all transform hover:-translate-y-1 active:translate-y-0 ${
-                        filter === t ? 'bg-[#FF3B30] text-white shadow-[4px_4px_0px_0px_white]' : 'bg-transparent text-gray-400 border-gray-600 hover:text-white hover:border-white'
-                    }`}
-                >
-                    {t}
-                </button>
-            ))}
+        <p className="text-lg md:text-2xl font-bold oswald text-[#FFCC00] mt-4 relative z-10">ALPHABETICAL ARCHIVE</p>
+        
+        <div className="relative z-10 mt-8">
+          <input 
+            type="text" 
+            placeholder="SEARCH_BY_TITLE..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-1/2 bg-white border-4 border-black p-4 font-black oswald text-black outline-none shadow-[8px_8px_0px_0px_#FF3B30] focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all"
+          />
         </div>
       </header>
 
-      <section>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
-          {currentList.map((item, idx) => (
-            <AnimeCard key={`${item.id}-${idx}`} anime={item} />
-          ))}
-        </div>
-      </section>
+      {/* A-Z Quick Jump */}
+      <div className="flex flex-wrap justify-center gap-2 relative z-10">
+        {groupedList.map((group, idx) => (
+          <a 
+            key={`${group.letter}-${idx}`} 
+            href={`#letter-${group.letter}`}
+            className="w-10 h-10 flex items-center justify-center bg-white border-4 border-black text-black font-black oswald hover:bg-[#FFCC00] transition-colors shadow-[4px_4px_0px_0px_black]"
+          >
+            {group.letter}
+          </a>
+        ))}
+      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-4 pb-10">
-            <button 
-            onClick={() => {
-                setPage(p => Math.max(1, p - 1));
-                window.scrollTo(0, 0);
-            }}
-            disabled={page === 1}
-            className={`px-8 py-3 font-black oswald border-4 border-black shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${page === 1 ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-white hover:bg-[#FFCC00] text-black'}`}
-            >
-            PREV
-            </button>
-            <div className="bg-black text-white px-6 py-3 border-4 border-black font-black oswald text-xl flex items-center justify-center min-w-[80px]">
-            {page} / {totalPages}
+      <section className="space-y-12">
+        {filteredList.length > 0 ? (
+          filteredList.map((group, gIdx) => (
+            <div key={`${group.letter}-${gIdx}`} id={`letter-${group.letter}`} className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#FF3B30] text-white w-16 h-16 flex items-center justify-center border-4 border-black text-4xl font-black oswald shadow-[6px_6px_0px_0px_black]">
+                  {group.letter}
+                </div>
+                <div className="h-2 flex-1 bg-black"></div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.items.map((item, iIdx) => (
+                  <div 
+                    key={`${item.id}-${gIdx}-${iIdx}`}
+                    onClick={() => navigate(`/detail/${item.id}`)}
+                    className="group cursor-pointer bg-white border-4 border-black p-4 flex items-center gap-4 hover:bg-[#FFCC00] transition-all transform hover:-translate-y-1 shadow-[6px_6px_0px_0px_black] hover:shadow-none"
+                  >
+                    <div className="w-2 h-8 bg-black group-hover:bg-[#FF3B30] transition-colors"></div>
+                    <span className="font-black oswald text-sm md:text-base uppercase truncate text-black">
+                      {item.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button 
-            onClick={() => {
-                setPage(p => Math.min(totalPages, p + 1));
-                window.scrollTo(0, 0);
-            }}
-            disabled={page === totalPages}
-            className={`px-8 py-3 font-black oswald border-4 border-black shadow-[4px_4px_0px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${page === totalPages ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-[#FF3B30] text-white hover:bg-red-600'}`}
-            >
-            NEXT
-            </button>
-        </div>
-      )}
+          ))
+        ) : (
+          <div className="text-center py-20 border-8 border-dashed border-black">
+             <h2 className="text-5xl font-black oswald text-gray-500">NO RECORDS MATCHED</h2>
+          </div>
+        )}
+      </section>
     </div>
   );
 };
 
 export default SeriesListPage;
+
